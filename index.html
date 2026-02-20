@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🍅 Tomate AR — Realidad Aumentada</title>
+
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #0d1f0e;
+      color: #e8f5e9;
+      overflow-x: hidden;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 60% 40%, #1b4d1e 0%, #0d1f0e 70%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(76,175,80,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139,195,74,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .leaf-deco {
+      font-size: 6rem;
+      animation: float 4s ease-in-out infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(-3deg); }
+      50%       { transform: translateY(-14px) rotate(3deg); }
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      color: #a5d6a7;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 30px rgba(165,214,167,0.3);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #81c784;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #4caf50, #8bc34a);
+      color: #0d1f0e;
+      font-family: 'Lato', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      box-shadow: 0 8px 30px rgba(76,175,80,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(76,175,80,0.5);
+    }
+
+    .info {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: #a5d6a7;
+      margin-bottom: 2rem;
+      border-left: 4px solid #4caf50;
+      padding-left: 1rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(76,175,80,0.2);
+      border-radius: 16px;
+      padding: 1.8rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(76,175,80,0.5);
+      transform: translateY(-4px);
+    }
+
+    .card-icon { font-size: 2.2rem; margin-bottom: 0.8rem; }
+    .card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: #c8e6c9;
+      margin-bottom: 0.5rem;
+    }
+    .card p { font-size: 0.95rem; color: #a5d6a7; line-height: 1.6; font-weight: 300; }
+
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.6rem; }
+    .badge {
+      background: rgba(76,175,80,0.15);
+      border: 1px solid rgba(76,175,80,0.3);
+      border-radius: 50px;
+      padding: 0.2rem 0.8rem;
+      font-size: 0.8rem;
+      color: #a5d6a7;
+    }
+
+    .marker-section {
+      background: rgba(255,255,255,0.03);
+      border-top: 1px solid rgba(76,175,80,0.15);
+      border-bottom: 1px solid rgba(76,175,80,0.15);
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .marker-section p { color: #81c784; max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.7; }
+
+    .marker-img {
+      width: min(260px, 80vw);
+      border: 4px solid #4caf50;
+      border-radius: 12px;
+      margin: 1rem auto;
+      display: block;
+      box-shadow: 0 0 40px rgba(76,175,80,0.35);
+      background: #fff;
+      padding: 12px;
+    }
+
+    .steps { max-width: 520px; margin: 2rem auto 0; text-align: left; }
+    .step { display: flex; gap: 1.2rem; align-items: flex-start; margin-bottom: 1.5rem; }
+    .step-num {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #4caf50, #8bc34a);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #0d1f0e; font-size: 0.9rem;
+    }
+    .step p { color: #a5d6a7; line-height: 1.6; padding-top: 0.4rem; }
+    .step a { color: #81c784; }
+
+    .warning {
+      background: rgba(255,193,7,0.08);
+      border: 1px solid rgba(255,193,7,0.3);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      margin: 2rem auto;
+      max-width: 620px;
+      color: #ffe082;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .warning strong { color: #ffd54f; }
+    .warning code {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      font-family: monospace;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #388e3c;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     ESCENA AR
+══════════════════════════════════════ -->
+<div id="ar-scene" style="display:none; position:fixed; inset:0; z-index:9999;">
+
+  <button onclick="closeAR()" style="
+    position:fixed; top:16px; right:16px; z-index:10000;
+    background:rgba(0,0,0,0.65); color:#fff; border:none;
+    font-size:1.3rem; padding:0.5rem 1.1rem; border-radius:8px; cursor:pointer;">
+    ✕ Cerrar
+  </button>
+
+  <div style="
+    position:fixed; bottom:0; left:0; right:0; z-index:10000;
+    background:rgba(13,31,14,0.88); backdrop-filter:blur(8px);
+    border-top:1px solid rgba(76,175,80,0.4);
+    padding:1rem 1.5rem; display:flex; align-items:center; gap:1rem;">
+    <span style="font-size:2rem;">🍅</span>
+    <div>
+      <strong style="color:#a5d6a7; font-family:'Playfair Display',serif; font-size:1.05rem;">
+        Solanum lycopersicum
+      </strong><br>
+      <small style="color:#81c784;">Apunta al marcador de tomate para ver el modelo 3D</small>
+    </div>
+  </div>
+
+  <!--
+    ══════════════════════════════════════════════════
+    ESCENA A-FRAME — MARCADOR PERSONALIZADO
+
+    CLAVES:
+      type="pattern"   → activa el modo de marcador propio
+      url="./marker.patt" → archivo .patt descargado del generador
+                           y subido a la raíz del repo en GitHub
+
+    MODELO 3D:
+      Sube tu archivo .glb (de Sketchfab) a la raíz del repo
+      con el nombre "tomate.glb"
+    ══════════════════════════════════════════════════
+  -->
+  <a-scene
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true;"
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+    style="width:100%; height:100%;">
+
+    <a-assets>
+      <a-asset-item id="tomate-model" src="./tomate.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- ★ MARCADOR PROPIO: type="pattern" + url al .patt -->
+    <a-marker
+      type="pattern"
+      url="./marker.patt"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5">
+
+      <!-- Modelo 3D de la planta de tomate, girando -->
+      <a-entity
+        gltf-model="#tomate-model"
+        scale="0.5 0.5 0.5"
+        position="0 0 0"
+        rotation="-90 0 0"
+        animation="property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear">
+      </a-entity>
+
+      <!-- Etiqueta flotante sobre el modelo -->
+      <a-text
+        value="Tomate\nSolanum lycopersicum"
+        position="0 2 0"
+        align="center"
+        color="#a5d6a7"
+        width="4"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt">
+      </a-text>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PÁGINA PRINCIPAL
+══════════════════════════════════════ -->
+
+<section class="hero">
+  <div class="leaf-deco">🌱</div>
+  <h1>Planta de Tomate<br>en Realidad Aumentada</h1>
+  <p class="subtitle">Solanum lycopersicum · AR Experience</p>
+  <button class="btn" onclick="openAR()">📷 Activar Realidad Aumentada</button>
+</section>
+
+<section class="info">
+  <h2 class="section-title">🍅 Información de la Especie</h2>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-icon">🔬</div>
+      <h3>Clasificación</h3>
+      <p>Familia Solanaceae, originaria de América del Sur. Especie: <em>Solanum lycopersicum</em>.</p>
+      <div class="badge-row">
+        <span class="badge">Solanaceae</span>
+        <span class="badge">Angiospermae</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">☀️</div>
+      <h3>Luz</h3>
+      <p>Necesita mínimo 6–8 horas de sol directo al día. Es una planta de pleno sol; la sombra reduce drásticamente la producción.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">💧</div>
+      <h3>Riego</h3>
+      <p>Riego profundo y regular: cada 2–3 días en verano. Evita mojar las hojas para prevenir hongos. La sequía brusca causa el rajado del fruto.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🌡️</div>
+      <h3>Temperatura</h3>
+      <p>Óptima entre 18 °C y 26 °C. Por debajo de 10 °C se detiene el crecimiento; las heladas la matan. Tolera hasta 35 °C con buen riego.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🌿</div>
+      <h3>Sustrato y Abono</h3>
+      <p>pH ideal: 6.0–6.8. Suelo rico y bien drenado. Abona cada 15 días con fertilizante rico en potasio durante la fructificación.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">✂️</div>
+      <h3>Poda y Tutores</h3>
+      <p>Elimina los "chupones" (brotes axilares) para concentrar energía en los frutos. Usa tutores de 1–1.5 m desde el inicio.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🐛</div>
+      <h3>Plagas Comunes</h3>
+      <p>Mosca blanca, pulgones, araña roja y Tuta absoluta. Vigila el envés de las hojas y actúa con jabón potásico o neem al primer signo.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">📅</div>
+      <h3>Ciclo de Cultivo</h3>
+      <p>Siembra: febrero–marzo. Trasplante: abril–mayo. Cosecha: julio–octubre. Ciclo total: ~120–150 días según variedad.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- INSTRUCCIONES DEL MARCADOR -->
+<section class="marker-section">
+  <h2 class="section-title" style="text-align:center; border:none; padding:0;">
+    📄 Marcador Personalizado de Tomate
+  </h2>
+
+  <p style="margin-top:1.5rem;">
+    Este proyecto usa un <strong>marcador propio</strong> creado específicamente
+    para esta planta. Una vez generado y subido, aparecerá aquí para imprimir.
+  </p>
+
+  <!-- La imagen se muestra cuando marker.png está subido a GitHub -->
+  <img
+    class="marker-img"
+    src="./marker.png"
+    alt="Marcador personalizado de tomate"
+    onerror="this.style.display='none'; document.getElementById('ph').style.display='flex';"
+  />
+  <div id="ph" style="
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    width:min(260px,80vw); margin:1rem auto;
+    background:rgba(255,255,255,0.04);
+    border:2px dashed rgba(76,175,80,0.4);
+    border-radius:12px; padding:2.5rem 1rem;
+    text-align:center; color:#4caf50; font-size:0.9rem; gap:0.5rem;">
+    <div style="font-size:3rem;">📄</div>
+    Aquí aparecerá tu <strong>marker.png</strong><br>una vez subido al repositorio
+  </div>
+
+  <div class="warning">
+    <strong>⚠️ Pasos para generar tu marcador propio:</strong><br><br>
+    Necesitas dos archivos: <code>marker.patt</code> (datos de tracking) y
+    <code>marker.png</code> (imagen imprimible). Se generan con la herramienta oficial de AR.js — sigue los pasos de abajo.
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <p>
+        Prepara una imagen PNG de tu icono de tomate en <strong>blanco y negro, alto contraste, sin simetría</strong>
+        (silueta simple funciona mejor que fotos).
+      </p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <p>
+        Ve al generador oficial de marcadores AR.js:<br>
+        <a href="https://jeromeetienne.github.io/AR.js/three.js/examples/marker-training/examples/generator.html"
+           target="_blank">
+          jeromeetienne.github.io → Marker Training Generator ↗
+        </a>
+      </p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <p>
+        Sube tu imagen. Haz clic en <strong>"Download Marker"</strong> → guarda como <code>marker.patt</code>.<br>
+        Haz clic en <strong>"Download Image"</strong> → guarda como <code>marker.png</code>.
+      </p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <p>
+        Sube <code>marker.patt</code>, <code>marker.png</code> y <code>tomate.glb</code>
+        a la <strong>raíz de tu repositorio</strong> en GitHub (junto al index.html).
+      </p>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <p>
+        Imprime <code>marker.png</code> o ábrelo en otra pantalla.
+        Entra a tu URL de <strong>GitHub Pages</strong>, activa la cámara AR y apunta al marcador.
+        ¡El modelo 3D aparecerá sobre él!
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  🌱 Proyecto educativo AR · Planta de Tomate · <em>Solanum lycopersicum</em><br>
+  Hecho con A-Frame · AR.js · GitHub Pages
+</footer>
+
+<script>
+  function openAR() {
+    document.getElementById('ar-scene').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAR() {
+    document.getElementById('ar-scene').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+</script>
+
+</body>
+</html>
