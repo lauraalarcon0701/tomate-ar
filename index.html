@@ -20,6 +20,7 @@
       overflow-x: hidden;
     }
 
+    /* ── HERO ── */
     .hero {
       min-height: 100vh;
       display: flex;
@@ -93,6 +94,7 @@
       box-shadow: 0 14px 40px rgba(76,175,80,0.5);
     }
 
+    /* ── INFO SECTION ── */
     .info {
       max-width: 900px;
       margin: 0 auto;
@@ -153,6 +155,77 @@
       font-size: 0.85rem;
       border-top: 1px solid rgba(76,175,80,0.1);
     }
+
+    /* ── CONTROLES AR (botones sobre la cámara) ── */
+    #ar-controls {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 110px;
+      z-index: 10000;
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .ar-btn {
+      background: rgba(13,31,14,0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(76,175,80,0.5);
+      color: #a5d6a7;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.55rem 1.1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+
+    .ar-btn:active, .ar-btn.active {
+      background: rgba(76,175,80,0.3);
+      border-color: #4caf50;
+    }
+
+    /* ── PANEL INFO AR ── */
+    #ar-info-panel {
+      display: none;
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 170px;
+      z-index: 10001;
+      background: rgba(13,31,14,0.93);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(76,175,80,0.4);
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      width: min(340px, 90vw);
+      color: #a5d6a7;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    #ar-info-panel h3 {
+      font-family: 'Playfair Display', serif;
+      color: #c8e6c9;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    #ar-info-panel .close-panel {
+      float: right;
+      background: none;
+      border: none;
+      color: #81c784;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+      margin-left: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -162,6 +235,7 @@
 ══════════════════════════════════════ -->
 <div id="ar-scene" style="display:none; position:fixed; inset:0; z-index:9999;">
 
+  <!-- Botón cerrar -->
   <button onclick="closeAR()" style="
     position:fixed; top:16px; right:16px; z-index:10000;
     background:rgba(0,0,0,0.65); color:#fff; border:none;
@@ -169,20 +243,49 @@
     ✕ Cerrar
   </button>
 
+  <!-- Panel de info flotante (se muestra al tocar 🍅 Info) -->
+  <div id="ar-info-panel">
+    <button class="close-panel" onclick="toggleInfo()">✕</button>
+    <h3>🍅 Solanum lycopersicum</h3>
+    <strong style="color:#81c784;">Origen:</strong> América del Sur<br>
+    <strong style="color:#81c784;">Familia:</strong> Solanaceae<br>
+    <strong style="color:#81c784;">Luz:</strong> 6–8 h de sol directo/día<br>
+    <strong style="color:#81c784;">Riego:</strong> Cada 2–3 días en verano<br>
+    <strong style="color:#81c784;">Temp. óptima:</strong> 18–26 °C<br>
+    <strong style="color:#81c784;">pH suelo:</strong> 6.0–6.8<br>
+    <strong style="color:#81c784;">Cosecha:</strong> 120–150 días tras siembra
+  </div>
+
+  <!-- Controles de interacción -->
+  <div id="ar-controls">
+    <button class="ar-btn" id="btn-rotate" onclick="toggleRotation()">⏸ Pausar giro</button>
+    <button class="ar-btn" onclick="scaleUp()">🔍 Agrandar</button>
+    <button class="ar-btn" onclick="scaleDown()">🔎 Reducir</button>
+    <button class="ar-btn" onclick="toggleInfo()">🍅 Info</button>
+    <button class="ar-btn" onclick="resetModel()">↺ Reset</button>
+  </div>
+
+  <!-- HUD inferior -->
   <div style="
     position:fixed; bottom:0; left:0; right:0; z-index:10000;
     background:rgba(13,31,14,0.88); backdrop-filter:blur(8px);
     border-top:1px solid rgba(76,175,80,0.4);
-    padding:1rem 1.5rem; display:flex; align-items:center; gap:1rem;">
+    padding:0.9rem 1.5rem; display:flex; align-items:center; gap:1rem;">
     <span style="font-size:2rem;">🍅</span>
     <div>
-      <strong style="color:#a5d6a7; font-family:'Playfair Display',serif; font-size:1.05rem;">
+      <strong style="color:#a5d6a7; font-family:'Playfair Display',serif; font-size:1rem;">
         Solanum lycopersicum
       </strong><br>
-      <small style="color:#81c784;">Apunta al marcador de tomate para ver el modelo 3D</small>
+      <small style="color:#81c784;">Arrastra para girar · Pellizca para escalar · Toca los botones</small>
     </div>
   </div>
 
+  <!--
+    ESCENA A-FRAME
+    · type="pattern" + url="./marker.patt" → tu marcador personalizado
+    · El modelo responde a gestos táctiles gracias al componente
+      de interacción que registramos abajo en el <script>
+  -->
   <a-scene
     vr-mode-ui="enabled: false"
     renderer="logarithmicDepthBuffer: true;"
@@ -191,25 +294,28 @@
     style="width:100%; height:100%;">
 
     <a-assets>
-      <!-- Cambia "tomate.glb" por el nombre exacto de tu archivo -->
       <a-asset-item id="tomate-model" src="./tomate.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Cambia "marker.patt" por el nombre exacto de tu archivo -->
     <a-marker
       type="pattern"
       url="./marker.patt"
       smooth="true"
       smoothCount="10"
       smoothTolerance="0.01"
-      smoothThreshold="5">
+      smoothThreshold="5"
+      id="marker">
 
+      <!-- Modelo 3D principal con id para controlarlo desde JS -->
       <a-entity
+        id="planta"
         gltf-model="#tomate-model"
         scale="0.5 0.5 0.5"
         position="0 0 0"
         rotation="-90 0 0"
-        animation="property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear">
+        touch-interaction
+        animation__spin="property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear; startEvents: startSpin"
+        animation__pulse="property: scale; from: 0.5 0.5 0.5; to: 0.6 0.6 0.6; dir: alternate; loop: 1; dur: 300; startEvents: pulse">
       </a-entity>
 
       <a-text
@@ -303,15 +409,200 @@
   Hecho con A-Frame · AR.js · GitHub Pages
 </footer>
 
+
 <script>
+  /* ══════════════════════════════════════════
+     APERTURA / CIERRE DE LA ESCENA AR
+  ══════════════════════════════════════════ */
   function openAR() {
     document.getElementById('ar-scene').style.display = 'block';
     document.body.style.overflow = 'hidden';
+    // Arranca el giro automático al abrir
+    setTimeout(() => {
+      const planta = document.getElementById('planta');
+      if (planta) planta.emit('startSpin');
+    }, 800);
   }
+
   function closeAR() {
     document.getElementById('ar-scene').style.display = 'none';
     document.body.style.overflow = '';
+    isRotating = true;
+    infoVisible = false;
+    document.getElementById('ar-info-panel').style.display = 'none';
   }
+
+  /* ══════════════════════════════════════════
+     ESTADO DEL MODELO
+  ══════════════════════════════════════════ */
+  let isRotating  = true;
+  let infoVisible = false;
+  // Escala base (misma que en el HTML — ajústala si cambias el scale inicial)
+  let currentScale = 0.5;
+  const SCALE_STEP = 0.1;
+  const SCALE_MIN  = 0.1;
+  const SCALE_MAX  = 2.0;
+
+  function getPlanta() {
+    return document.getElementById('planta');
+  }
+
+  /* ── Pausar / reanudar giro ── */
+  function toggleRotation() {
+    const planta = getPlanta();
+    const btn    = document.getElementById('btn-rotate');
+    if (!planta) return;
+
+    const anim = planta.components['animation__spin'];
+    if (isRotating) {
+      planta.removeAttribute('animation__spin');
+      btn.textContent = '▶ Girar';
+      btn.classList.add('active');
+    } else {
+      planta.setAttribute('animation__spin',
+        'property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear');
+      btn.textContent = '⏸ Pausar giro';
+      btn.classList.remove('active');
+    }
+    isRotating = !isRotating;
+  }
+
+  /* ── Agrandar ── */
+  function scaleUp() {
+    const planta = getPlanta();
+    if (!planta) return;
+    currentScale = Math.min(currentScale + SCALE_STEP, SCALE_MAX);
+    applyScale(planta);
+    planta.emit('pulse');
+  }
+
+  /* ── Reducir ── */
+  function scaleDown() {
+    const planta = getPlanta();
+    if (!planta) return;
+    currentScale = Math.max(currentScale - SCALE_STEP, SCALE_MIN);
+    applyScale(planta);
+    planta.emit('pulse');
+  }
+
+  function applyScale(planta) {
+    const s = currentScale;
+    planta.setAttribute('scale', `${s} ${s} ${s}`);
+  }
+
+  /* ── Reset ── */
+  function resetModel() {
+    const planta = getPlanta();
+    if (!planta) return;
+    currentScale = 0.5;
+    applyScale(planta);
+    planta.setAttribute('rotation', '-90 0 0');
+    // Reinicia el giro si estaba parado
+    if (!isRotating) toggleRotation();
+  }
+
+  /* ── Panel de info ── */
+  function toggleInfo() {
+    infoVisible = !infoVisible;
+    document.getElementById('ar-info-panel').style.display =
+      infoVisible ? 'block' : 'none';
+  }
+
+  /* ══════════════════════════════════════════
+     GESTOS TÁCTILES SOBRE LA CÁMARA AR
+     – Un dedo: girar el modelo manualmente
+     – Dos dedos (pellizco): escalar
+  ══════════════════════════════════════════ */
+  AFRAME.registerComponent('touch-interaction', {
+    init() {
+      this.lastX       = 0;
+      this.lastY       = 0;
+      this.lastDist    = 0;
+      this.isDragging  = false;
+      this.isPinching  = false;
+
+      // Necesitamos escuchar en el canvas de la escena
+      this.onTouchStart = this.onTouchStart.bind(this);
+      this.onTouchMove  = this.onTouchMove.bind(this);
+      this.onTouchEnd   = this.onTouchEnd.bind(this);
+
+      // Adjuntamos al document para capturar toques en toda la pantalla
+      document.addEventListener('touchstart', this.onTouchStart, { passive: false });
+      document.addEventListener('touchmove',  this.onTouchMove,  { passive: false });
+      document.addEventListener('touchend',   this.onTouchEnd);
+    },
+
+    remove() {
+      document.removeEventListener('touchstart', this.onTouchStart);
+      document.removeEventListener('touchmove',  this.onTouchMove);
+      document.removeEventListener('touchend',   this.onTouchEnd);
+    },
+
+    onTouchStart(e) {
+      if (e.touches.length === 1) {
+        this.isDragging = true;
+        this.isPinching = false;
+        this.lastX = e.touches[0].clientX;
+        this.lastY = e.touches[0].clientY;
+      } else if (e.touches.length === 2) {
+        this.isDragging = false;
+        this.isPinching = true;
+        this.lastDist = this.getPinchDist(e);
+      }
+    },
+
+    onTouchMove(e) {
+      const planta = document.getElementById('planta');
+      if (!planta) return;
+
+      if (this.isDragging && e.touches.length === 1) {
+        // ── Rotación manual con un dedo ──
+        const dx = e.touches[0].clientX - this.lastX;
+        const dy = e.touches[0].clientY - this.lastY;
+        this.lastX = e.touches[0].clientX;
+        this.lastY = e.touches[0].clientY;
+
+        const rot = planta.getAttribute('rotation');
+        // dx → giro en Y (yaw), dy → inclinación en X (pitch)
+        planta.setAttribute('rotation', {
+          x: rot.x + dy * 0.4,
+          y: rot.y + dx * 0.4,
+          z: rot.z
+        });
+
+        // Si hay giro manual, detenemos el auto-spin para no pelear
+        if (isRotating) {
+          planta.removeAttribute('animation__spin');
+          isRotating = false;
+          document.getElementById('btn-rotate').textContent = '▶ Girar';
+          document.getElementById('btn-rotate').classList.add('active');
+        }
+
+      } else if (this.isPinching && e.touches.length === 2) {
+        // ── Escala con pellizco (pinch) ──
+        e.preventDefault();
+        const dist  = this.getPinchDist(e);
+        const delta = dist - this.lastDist;
+        this.lastDist = dist;
+
+        currentScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, currentScale + delta * 0.003));
+        planta.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+      }
+    },
+
+    onTouchEnd(e) {
+      if (e.touches.length === 0) {
+        this.isDragging = false;
+        this.isPinching = false;
+      }
+    },
+
+    getPinchDist(e) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+  });
 </script>
 
 </body>
