@@ -308,15 +308,16 @@
 
       <!-- Modelo 3D principal con id para controlarlo desde JS -->
       <a-entity
-        id="planta"
-        gltf-model="#tomate-model"
-        scale="1 1 1"
-        position="0 0 0"
-        rotation="0 0 0"
-        touch-interaction
-        animation__spin="property: rotation; to: -90 360 0; loop: true; dur: 9000; easing: linear; startEvents: startSpin"
-        animation__pulse="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dir: alternate; loop: 1; dur: 300; startEvents: pulse"
-      </a-entity>
+  id="planta"
+  gltf-model="#tomate-model"
+  scale="0.05 0.05 0.05"
+  position="0 0.5 0"
+  rotation="0 0 0"
+  touch-interaction
+  animation__spin="property: rotation; to: 0 360 0; loop: true; dur: 9000; easing: linear; startEvents: startSpin"
+  animation__pulse="property: scale; from: 0.05 0.05 0.05; to: 0.055 0.055 0.055; dir: alternate; loop: 1; dur: 300; startEvents: pulse">
+</a-entity>
+    
 
       <a-text
         value="Tomate\nSolanum lycopersicum"
